@@ -21,6 +21,7 @@
 .segment "CODE"
 .include "math.s"
 .include "reset.s"
+.include "inputHandler.s"
 .include "player.s"
 .include "shot.s"
 
@@ -32,14 +33,19 @@ STA $2003       ; set the low byte (00) of the RAM address
 LDA #$02
 STA $4014       ; set the high byte (02) of the RAM address, start the transfer
 
+jsr InputHandlerStart
 
 jsr PlayerUpdate
 jsr PlayerDraw
-
-jsr ShotUpdate
-jsr ShotDraw
-
+;
+;UpdateShotsCall:
+  jsr ShotUpdate
+  jsr ShotDraw
+;
 RTI
+
+
+
 
 background_palette:
   .byte $22,$29,$1A,$0F	;background palette 1
@@ -77,6 +83,9 @@ enemy_sprite: ; starts at $0220
 rnd_table:
   .byte $3B, $08, $7A, $BC
   .byte $08, $7A, $3B, $BC
+
+
+
 
 .segment "CHARS"
  .incbin "mario.chr"   ;includes 8KB graphics file from SMB1

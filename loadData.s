@@ -40,15 +40,4 @@ LoadSpritesLoop:
   STA $2001
 
   jsr PlayerInit
-
-LoadRandomTable:
-ldx #$00
-LoadRandomTableLoop:
-  lda rnd_table, x
-  sta $50, x ; random_number_list
-  inx
-  cpx #$08
-  bne LoadRandomTableLoop
-
-
-
+  jsr ShotInit

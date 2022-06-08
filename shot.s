@@ -4,12 +4,25 @@ shot_position_y             = $11
 shot_velocity               = $12
 shot_active                 = $13
 
+ShotInit:
+    ldx #$00
+    stx shot_position_x
+    stx shot_position_y
+    stx shot_active
+    ldx #$05
+    stx shot_velocity
+    rts
+
 
 ShotLoad:
-lda player_x
-sta shot_position_x
-lda player_y
-sta shot_position_y
+; check if shot is not allready active
+lda shot_active
+cmp #$01
+beq ShotLoadDone
+
+ShotLoadStart:
+stx shot_position_x
+sty shot_position_y
 
 ldx #$00
 ShotLoadLoop:
@@ -20,6 +33,8 @@ ShotLoadLoop:
     bne ShotLoadLoop
 lda #$01
 sta shot_active
+
+ShotLoadDone:
 rts
 
 
@@ -46,14 +61,22 @@ DeleteShotLoop:
     inx 
     cpx #$04
     bne DeleteShotLoop
+    ldx #$00
+    stx shot_active
 
 ShotUpdateDone:
 rts
 
 ShotDraw:
+    ldx shot_active
+    cpx #$01
+    beq ShotRender
+    jmp ShotRenderDone    
+ShotRender:
     lda shot_position_x
     sta $0213 
     lda shot_position_y
     sta $0210
-    
+ShotRenderDone:
+
 rts

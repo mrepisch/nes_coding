@@ -1,15 +1,21 @@
 ;player from $00 to $0F
-player_x        = $00
-player_y        = $01
-player_velocity = $02
+player_x                = $00
+player_y                = $01
+player_velocity         = $02
+
+
 
 PlayerInit:
+  ldx #$14
+  stx player_spawn_counter
   ldx #$08
   stx player_x
   ldx #$7F
   stx player_y
   ldx #$05
   stx player_velocity
+  ldx #00
+  stx player_can_create_shot_flag
 rts
 
 PlayerDraw:
@@ -33,53 +39,45 @@ rts
 
 
 PlayerUpdate:
+  lda input_handler_controller_1
+  and #BUTTON_DOWN 
+  bne DownPressed
+PlayerAfterDownPressed:
+  lda input_handler_controller_1
+  and #BUTTON_UP
+  bne UpPressed
+PlayerAfterUpPressed:
+  lda input_handler_controller_1
+  and #BUTTON_A
+  bne AButtonPressed
+AfterButtonAPressed:
 
 
-LatchController:
-  LDA #$01
-  STA $4016
-  LDA #$00
-  STA $4016       ; tell both the controllers to latch buttons
+
+UpdateEnd:
+
+rts
 
 
-  ldx #$00
-InputLoop:
-  LDA $4016       ; player 1 - A
-  AND #%00000001  ; only look at bit 0
-  BNE ButtonPressed
-AfterButtonPressed:  
-  inx 
-  cpx #$08
-  bne InputLoop
-rts  
 
-ButtonPressed:
-  txa 
-  sta $04
-  cpx #$00
-  beq A_ButtonPressed
-  cpx #$04
-  beq Up_Pressed
-  cpx #$05
-  beq DownPressed
+AButtonPressed:  
+  ldx player_x
+  ldy player_y
+  jsr ShotLoad
+  jmp AfterButtonAPressed
 
-A_ButtonPressed:
-  ;jsr ShotLoad ; Problem
-  jmp AfterButtonPressed
-
-Up_Pressed:
+UpPressed:
   lda player_y
   sec
   sbc player_velocity
   bcc SetPlayerTo00
   sta player_y
-  jmp AfterButtonPressed
+  jmp PlayerAfterUpPressed;
 
 SetPlayerTo00:
 lda #$08
 sta player_y
-jmp AfterButtonPressed
-
+jmp PlayerAfterUpPressed
 
 DownPressed:
   lda player_y
@@ -88,9 +86,8 @@ DownPressed:
   cmp #$D0
   bcs SetPlayerToFF
   sta player_y
-  jmp AfterButtonPressed
-
+  jmp PlayerAfterDownPressed;
 SetPlayerToFF:
   lda #$D0
   sta player_y
-  jmp AfterButtonPressed
+  jmp PlayerAfterDownPressed
