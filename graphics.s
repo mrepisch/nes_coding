@@ -6,7 +6,6 @@ graphics_current_x_to_set = $0122
 graphics_current_y_to_set = $0123
 graphics_current_offset_in_ppu_memory = $0124
 
-
 GraphicsInit:
     lda #$00
     sta graphics_ppu_offset
@@ -36,7 +35,8 @@ GraphicsLoadSpriteLoop:
 
 rts
 
-; Set the new Y position for the 4x4 sprit
+; Set the new Y position for the 4x4 sprite
+; Overwrites x and y register !!!!
 GraphicsUpdatePPU:
     ldy #$00
     ldx graphics_current_offset_in_ppu_memory
@@ -72,10 +72,7 @@ GraphicsUpdatePPU:
     jsr GraphicsIncreaseXby4
     jsr GraphicsIncreaseXby4
     sta graphics_ppu_start, x
-
 rts
-
-
 
 GraphicsIncreaseAby8:
     clc

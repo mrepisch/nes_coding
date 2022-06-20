@@ -31,8 +31,6 @@ EnemyLoad:
     ldy #$10
     jsr GraphicsLoadSprite
 
-
-
     ; get the data offset 
     ldx enemy_counter
     lda #$04
@@ -92,15 +90,12 @@ ldx #$00
 stx enemy_render_index
 ldy #00
 EnemyRenderLoop:
-
-
     lda enemy_data, y
     sta graphics_current_y_to_set
     iny 
     lda enemy_data, y
     sta graphics_current_x_to_set
     
-
     iny ; Offset for data memory
     iny
     iny
@@ -110,13 +105,13 @@ EnemyRenderLoop:
     sta graphics_current_offset_in_ppu_memory
     sty enemy_data_index
     jsr GraphicsUpdatePPU
-    ;Store the x and y into a variable since the render 
-    ;PPU Update subrutine overwrites the values !!!!!
+    ; Store the x and y into a variable since the render 
+    ; PPU Update subroutine overwrites the values !!!!!
     ldy enemy_data_index
     ldx enemy_render_index
     inx
     cpx enemy_counter
-    bne EnemyRenderLoop ;
+    bne EnemyRenderLoop 
 
 rts
 

@@ -3,8 +3,6 @@ player_x                = $00
 player_y                = $01
 player_velocity         = $02
 
-
-
 PlayerInit:
   ldx #$08
   stx player_x
@@ -26,9 +24,7 @@ PlayerDraw:
   sta graphics_current_y_to_set
   lda #$00
   sta graphics_current_offset_in_ppu_memory
-
-  jsr GraphicsUpdatePPU
-
+  jsr GraphicsUpdatePPU 
 rts
 
 
