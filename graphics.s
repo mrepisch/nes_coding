@@ -1,10 +1,10 @@
 
-graphics_ppu_start = $0200
+graphics_ppu_start = $0200 ; PPU Memory start address
 graphics_ppu_offset = $0120 ; counter to the last set byte 
-graphics_temp = $0121
-graphics_current_x_to_set = $0122
-graphics_current_y_to_set = $0123
-graphics_current_offset_in_ppu_memory = $0124
+graphics_temp = $0121 ; Temporary value for the load loop
+graphics_current_x_to_set = $0122 ; Use this from outsite as parameter
+graphics_current_y_to_set = $0123 ; Use this from outsite as parameter
+graphics_current_offset_in_ppu_memory = $0124 ; Use this from outsite as parameter
 
 GraphicsInit:
     lda #$00
@@ -35,8 +35,17 @@ GraphicsLoadSpriteLoop:
 
 rts
 
-; Set the new Y position for the 4x4 sprite
+; Set the new Y position for the 4 sprites          xx
+;                                                   xx
 ; Overwrites x and y register !!!!
+; Combine more 4 blocks to bigger sprites
+; Sprite list always needs the same pattern for x and y positions
+;       Y   TileID            X
+; .byte $08, $3A, %00000000, $08   ;sprite 0
+; .byte $08, $37, %00000000, $10   ;sprite 1
+; .byte $10, $4f, %00000000, $08   ;sprite 2
+; .byte $10, $4f, %01000000, $10   ;sprite 3
+
 GraphicsUpdatePPU:
     ldy #$00
     ldx graphics_current_offset_in_ppu_memory
@@ -91,4 +100,3 @@ GraphicsIncreaseXby3:
     inx
     inx 
 rts
-
