@@ -20,10 +20,12 @@
 ; Main code segement for the program
 .segment "CODE"
 .include "math.s"
+.include "graphics.s"
 .include "reset.s"
 .include "inputHandler.s"
 .include "player.s"
 .include "shot.s"
+.include "enemys.s"
 
 
 NMI:
@@ -35,9 +37,12 @@ STA $4014       ; set the high byte (02) of the RAM address, start the transfer
 
 jsr InputHandlerStart
 
+jsr EnemyLoad;
+jsr EnemyUpdate
 jsr PlayerUpdate
+
 jsr PlayerDraw
-;
+jsr EnemyRender
 ;UpdateShotsCall:
   jsr ShotUpdate
   jsr ShotDraw
@@ -60,20 +65,20 @@ sprite_palette:
   .byte $22,$0F,$36,$17	;sprite palette 4
 
 sprites:
-     ;vert tile attr horiz
-     ; 203 204 205 206
-     ; 207; 208 209 20A
-     ; 20B 20C 20D 20E
-     ; 20F 210 211 212
-  .byte $08, $3A, %00000000, $08   ;sprite 0
-  .byte $08, $37, %00000000, $10   ;sprite 1
-  .byte $10, $4f, %00000000, $08   ;sprite 2
-  .byte $10, $4f, %01000000, $10   ;sprite 3
 
 shot_sprite:
   .byte $08, $75, %00000000, $08
 
-enemy_sprite: ; starts at $0220
+enemy_data_block: 
+  .byte $08, $08, $00, $00
+
+graphics_sprite_list: 
+  ; Mario
+  .byte $08, $3A, %00000000, $08   ;sprite 0
+  .byte $08, $37, %00000000, $10   ;sprite 1
+  .byte $10, $4f, %00000000, $08   ;sprite 2
+  .byte $10, $4f, %01000000, $10   ;sprite 3
+ ; Goomba
   .byte $08, $70, %00000000, $08   ;sprite 0
   .byte $08, $71, %00000000, $10   ;sprite 1
   .byte $10, $72, %00000000, $08   ;sprite 2
@@ -83,9 +88,6 @@ enemy_sprite: ; starts at $0220
 rnd_table:
   .byte $3B, $08, $7A, $BC
   .byte $08, $7A, $3B, $BC
-
-
-
 
 .segment "CHARS"
  .incbin "mario.chr"   ;includes 8KB graphics file from SMB1

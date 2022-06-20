@@ -1,139 +1,133 @@
+enemy_counter = $20
+enemy_data_index = $21
+enemy_render_index = $22
+enemy_rnd_table_index = $24
+enemy_data    = $30
+enemy_rnd_table = $60
 
 
-update:
-    ldx enemy_counter
+
+EnemyInit:
+    ldx #$01
+    stx enemy_render_index
+    ldx #$00
+    stx enemy_counter
+    stx enemy_rnd_table_index
+LoadRndTableLoop:
+    lda rnd_table,x
+    sta enemy_rnd_table, x 
+    inx
+    cpx #$08
+    bne LoadRndTableLoop
+
+rts
+
+EnemyLoad:
+    ldx enemy_counter    
     cpx #$04
-    bne LoadNewEnemy
-    jmp UpdateEnemyPositions
+    beq EnemyLoadEnd
+
+    ldx #$10
+    ldy #$10
+    jsr GraphicsLoadSprite
 
 
-LoadNewEnemy:
-    ldx #$00 ; loop counter
-    lda #$00 ; calculatet offset value
 
-CalculateOffsetForGraphics:
-    cpx enemy_counter
-    bne IncrementOffsettForGraphics
-    jmp StoreOffeset
-IncrementOffsettForGraphics:
-    adc #$10
-    inx
-    jmp CalculateOffsetForGraphics
+    ; get the data offset 
+    ldx enemy_counter
+    lda #$04
+    jsr Mathmultiply
+    sta enemy_data_index
 
-StoreOffeset:
-    sta current_offset
-    ldx #$00
-    tay 
-
-LoadEnemySpritesLoop:
-    LDA enemy_sprite, x   ; load data from address (sprites +  x)
-    STA $0230, y          ; store into RAM address ($0200 + y)
-    INX                   ; X = X + 1
-    iny
-    CPX #$10              ; Compare X to hex $10, decimal 16
-    BNE LoadEnemySpritesLoop   ; Branch to LoadSpritesLoop if compare was Not Equal to zero
-                        ; if compare was equal to 32, keep going down 
-StoreEnemyData:
-
-lda #$00
-ldx #$00
-OffsetLoop:
-    cpx enemy_counter
-    bne IncrementOffset
-    jmp LoadEnemyDataIntoRam
-IncrementOffset:
-    adc #$04
-    inx
-    jmp OffsetLoop
-
-LoadEnemyDataIntoRam:
-SetYPos:
-    tay
-    ldx random_table_index
-    lda random_numbers_list, x
-    sta enemy_data_list, y
-    iny
+    ; Generate y
+    ldx enemy_rnd_table_index
+    lda enemy_rnd_table, x 
     inx 
-    cpx #$07;Reset index if 8
-    beq ResetCounter
-    stx random_table_index
-    jmp setXPos;
-ResetCounter:
+    cpx #$08
+    bne EnemyLoadPositions
     ldx #$00
-    stx random_table_index;
-setXPos:
-    lda #$F5
-    sta enemy_data_list, y;
-    
+    stx enemy_rnd_table_index
 
-IncrementEnemyCounter:
+EnemyLoadPositions:
+    stx enemy_rnd_table_index
+    ; Y Position
+    ldx enemy_data_index
+    sta enemy_data, x
+
+    inx ; Increment x for since the x positions has an offset of 1
+    ; X Positions
+    lda #$ED
+    sta enemy_data, x
+    
+    ; Increment the enemycounter 
     ldx enemy_counter
     inx
     stx enemy_counter
-    jmp UpdateEnemeyPositionsInit
+EnemyLoadEnd:
 
-UpdateEnemyPositions:
-    ;  Just move every 20 Frames
-    ldx frame_counter_for_movement
-    cpx #$14
-    beq UpdateEnemeyPositionsInit
-    jmp UpdateEnemyDone
+rts
 
-UpdateEnemeyPositionsInit:
-    ; In PPU start at $0230
-    ; loop index from 0 to enemycounter
+EnemyUpdate:
     ldx #$00
-    stx frame_counter_for_movement
-    stx enemy_index
-    ldx #$00 ; Dataoffset
-    ldy #$00 ; Graphic offset
-UpdateEnemyPositionLoop:
-    ; Set y Positions
-    lda enemy_data_list, x
-    sta $0230, y
-    sta $0234, y
-    adc #$07
-    sta $0238, y
-    sta $023C, y
-
-    INX ; Increment offset for the y position by 1
-    lda enemy_data_list, x
-    
-    sta $0233, y
-    sta $023B, y
-    adc #$08
-    sta $0237, y
-    sta $023F, y
- 
-    lda enemy_data_list, x 
+    ldy #$01
+EnemyUpdateLoop:
+    lda enemy_data, y
+    sec
     sbc #$01
-    sta enemy_data_list, x
-    DEX ; Decrement the offset to go back to the x position for the next enemy
 
-    lda enemy_index ; load the current enemyIndex
-    cmp #$03
-    bne IncrementUpdateOffsets
-    jmp UpdateEnemyDone
+    sta enemy_data, y
+    iny
+    iny
+    iny
+    iny
 
-IncrementUpdateOffsets:
-    txa 
-    clc
-    adc #$04
-    tax  ; Update data offset
+    inx 
+    cpx enemy_counter
+    bne EnemyUpdateLoop
+rts
+
+
+EnemyRender:
+ldx #$00
+stx enemy_render_index
+ldy #00
+EnemyRenderLoop:
+
+
+    lda enemy_data, y
+    sta graphics_current_y_to_set
+    iny 
+    lda enemy_data, y
+    sta graphics_current_x_to_set
     
-    tya 
+
+    iny ; Offset for data memory
+    iny
+    iny
+
+    stx enemy_render_index
+    jsr EnemyCalculateGraphicOffset
+    sta graphics_current_offset_in_ppu_memory
+    sty enemy_data_index
+    jsr GraphicsUpdatePPU
+    ;Store the x and y into a variable since the render 
+    ;PPU Update subrutine overwrites the values !!!!!
+    ldy enemy_data_index
+    ldx enemy_render_index
+    inx
+    cpx enemy_counter
+    bne EnemyRenderLoop ;
+
+rts
+
+
+EnemyCalculateGraphicOffset:
+    lda #00
+    adc #$10
+EnemyOffsetCalculationLoop:
     clc
     adc #$10
-    tay ; Update Grapic Offset
-
-    lda enemy_index
-    adc #$01
-    sta enemy_index
-
-    jmp UpdateEnemyPositionLoop
-
-UpdateEnemyDone:
-    ; Upgrade the frame counter
-    ldx frame_counter_for_movement
-    inx
-    stx frame_counter_for_movement
+    dex
+    cpx #$00
+    bne EnemyOffsetCalculationLoop
+rts
