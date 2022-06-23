@@ -11,18 +11,18 @@ GraphicsInit:
     sta graphics_ppu_offset
     rts
 
-; a -> first byte of the sprite
+
 ; x -> Amount of bytes to store
 ; y -> offset in memory of the sprite_list
 
 GraphicsLoadSprite:
-    
 GraphicsLoadSpriteLoop:
-    lda graphics_sprite_list,  y
+    lda graphics_sprite_list,  y; Offset is y
     sty graphics_temp
 
     ldy graphics_ppu_offset
     sta graphics_ppu_start, y
+
     iny
     sty graphics_ppu_offset
     
@@ -32,9 +32,41 @@ GraphicsLoadSpriteLoop:
     dex
     cpx #$00
     bne GraphicsLoadSpriteLoop
+rts
+
+; x amount of bytes to NULL
+; y the offset in ppu memory
+GraphicsDeleteSprite:
+GraphicsDeleteLoop:
+    lda #$00 ; NULL
+
+    sta graphics_ppu_start, y ; NULL the value stores -> 0200 + y as offset register
+    iny ; increment the index
+    sty graphics_temp ; store the ppu offset 
+    ; reduce the first free index in PPU Memory to use the freed up memory
+    ldy graphics_ppu_offset 
+    dey 
+    sty graphics_ppu_offset ;  Store the new offset
+    ldy graphics_temp ; load the current ppu offset to accses right location to NULL
+    dex
+    cpx #$00
+    bne GraphicsDeleteLoop
 
 rts
 
+GraphicsUpdatePPUSingleSprite:
+    ; Y pos
+    ldx graphics_current_offset_in_ppu_memory
+    lda graphics_current_y_to_set
+    sta graphics_ppu_start, x
+
+    jsr GraphicsIncreaseXby3
+    ; X pos
+    lda graphics_current_x_to_set
+    sta graphics_ppu_start, x
+rts
+
+    
 ; Set the new Y position for the 4 sprites          xx
 ;                                                   xx
 ; Overwrites x and y register !!!!

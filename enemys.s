@@ -1,16 +1,22 @@
 enemy_counter = $20
 enemy_data_index = $21
 enemy_render_index = $22
+enemy_frame_counter = $23
 enemy_rnd_table_index = $24
+enemy_frame_movement_speed = $25
 enemy_data    = $30
 enemy_rnd_table = $60
 
 
 
 EnemyInit:
+    ldx #$10
+    stx enemy_frame_movement_speed
+
     ldx #$01
     stx enemy_render_index
     ldx #$00
+    stx enemy_frame_counter
     stx enemy_counter
     stx enemy_rnd_table_index
 LoadRndTableLoop:
@@ -66,22 +72,34 @@ EnemyLoadEnd:
 rts
 
 EnemyUpdate:
+    ldx enemy_frame_counter
+    inx 
+    stx enemy_frame_counter
+    cpx enemy_frame_movement_speed
+    bne EnemyUpdateLoopEnd
+    ldx #$00
+    stx enemy_frame_counter
+
+
     ldx #$00
     ldy #$01
 EnemyUpdateLoop:
+    
     lda enemy_data, y
     sec
     sbc #$01
-
     sta enemy_data, y
     iny
     iny
     iny
     iny
-
+    
     inx 
     cpx enemy_counter
     bne EnemyUpdateLoop
+
+EnemyUpdateLoopEnd:
+    
 rts
 
 

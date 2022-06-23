@@ -64,11 +64,6 @@ sprite_palette:
   .byte $22,$16,$30,$27	;sprite palette 3
   .byte $22,$0F,$36,$17	;sprite palette 4
 
-sprites:
-
-shot_sprite:
-  .byte $08, $75, %00000000, $08
-
 enemy_data_block: 
   .byte $08, $08, $00, $00
 
@@ -83,6 +78,8 @@ graphics_sprite_list:
   .byte $08, $71, %00000000, $10   ;sprite 1
   .byte $10, $72, %00000000, $08   ;sprite 2
   .byte $10, $73, %00000000, $10   ;sprite 3
+; Shot Sprite
+  .byte $08, $75, %00000000, $08
 
 
 rnd_table:
